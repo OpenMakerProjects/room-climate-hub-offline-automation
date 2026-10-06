@@ -64,7 +64,7 @@ id/light_raw are integers, door_open/dark/fault booleans, rgb three duty integer
 Cover the LDR until below 1200, open the door contact for at least 50 ms: white indicator. Illuminate above 1600 with contact open: dim green. Close contact for 50 ms: off. Between thresholds the prior dark state persists. Disconnect the browser; repeat rules to demonstrate independence from network clients. Never infer lux or measured energy savings from raw ADC.
 
 ## Tests and actual run results
-Cloud host assertions cover dark hysteresis boundaries, debounce/bounce, RGB decisions, invalid ADC and timer rollover. CI checks PNG transport, PNG/SVG/local links/license/credential patterns and builds the ESP32 firmware. **Current run results are pending. No physical wiring, Wi-Fi RF, LED brightness or light calibration test has been performed.**
+Cloud host assertions cover dark hysteresis boundaries, debounce/bounce, RGB decisions, invalid ADC and timer rollover. CI checks PNG transport, PNG/SVG/local links/license/credential patterns and builds the ESP32 firmware. **Actual cloud checks passed:** native policy assertions, three PNG transport regression tests, PNG/SVG/local links/MIT/credential checks and ESP32 target build passed on 421c228fe1fadc7983b89e91cfb5a6f7fdf4a7c3 in [this Actions run](https://github.com/OpenMakerProjects/room-climate-hub-offline-automation/actions/runs/37416498969). Final gates are repeated on this result-documentation commit. No physical wiring, Wi-Fi RF, LED brightness or light calibration test has been performed.
 ```sh
 python tools/validate.py
 python tools/validate_completion.py
