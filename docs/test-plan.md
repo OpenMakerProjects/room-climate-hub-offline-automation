@@ -1,1 +1,3 @@
 Cloud: host assertions, image transport/gates and ESP32 compile. Not performed: physical reed debounce, measured LDR calibration, LED brightness/polarity, Wi-Fi RF access and disconnect-client demonstration.
+
+Actual cloud recovery run https://github.com/OpenMakerProjects/room-climate-hub-offline-automation/actions/runs/37416498969 passed policy assertions, all three image transport tests, PNG/SVG/image links/MIT/credential checks and ESP32 build, then repeated all gates on result-documentation head d87435711df742658d1c2c6587b8583f8bc90087. Hardware tests remain unperformed. This connector-authored commit triggers final-head push/PR CI before merge.
