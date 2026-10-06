@@ -1,9 +1,1 @@
-# Architecture
-
-```text
-Sensors -> validation and filtering -> closed loop control -> output/alert
-                                      |
-                                      +-> Wi-Fi telemetry and logs
-```
-
-The implementation separates acquisition, decision logic, output handling, and telemetry. Hardware-specific access is kept at the edge so the core behavior can be tested with simulated readings.
+Local ADC/reed → OfflinePolicy → RGB LED. Local open lab AP hosts read-only HTTP JSON; no Internet/router/cloud dependence. Conceptual overview UI differs from simple implemented endpoint.

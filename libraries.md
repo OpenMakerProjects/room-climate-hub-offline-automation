@@ -1,0 +1,1 @@
+PlatformIO 6.1.18; espressif32 platform 6.8.1 with Arduino ESP32 framework. WiFi and WebServer come from the core; no third-party runtime library required. LEDC calls match that pinned Arduino core generation.

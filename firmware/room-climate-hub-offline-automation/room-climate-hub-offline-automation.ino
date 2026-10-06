@@ -1,107 +1,26 @@
 #include <Arduino.h>
-
-#ifndef LED_BUILTIN
-#define LED_BUILTIN 2
-#endif
-
-// Room Climate Hub Offline Automation
-// Roadmap project 6; mode: closed_loop_control
-constexpr uint8_t SENSOR_PINS[] = {A0, A1, A2};
-constexpr size_t SENSOR_COUNT = sizeof(SENSOR_PINS) / sizeof(SENSOR_PINS[0]);
-constexpr uint8_t OUTPUT_PIN = LED_BUILTIN;
-constexpr unsigned long SAMPLE_INTERVAL_MS = 750UL;
-constexpr float TRIGGER_THRESHOLD = 0.51f;
-constexpr uint8_t REQUIRED_CONFIRMATIONS = 4;
-
-enum class SystemState : uint8_t { Starting, Normal, Active, Fault };
-
-struct Snapshot {
-  float values[SENSOR_COUNT];
-  float score;
-  bool valid;
-};
-
-SystemState state = SystemState::Starting;
-unsigned long lastSampleAt = 0;
-uint8_t confirmations = 0;
-bool outputActive = false;
-
-float normalizeReading(int raw) {
-  return constrain(raw / 1023.0f, 0.0f, 1.0f);
+#include <WiFi.h>
+#include <WebServer.h>
+#include "policy.h"
+constexpr uint8_t DOOR=27,LIGHT=34,R=25,G=26,B=33;
+OfflinePolicy policy;WebServer server(80);int adc=0;uint32_t lastReport=0;
+String statusJson(){
+ char out[210];
+ snprintf(out,sizeof(out),"{\"id\":6,\"door_open\":%s,\"light_raw\":%d,\"dark\":%s,\"fault\":%s,\"rgb\":[%u,%u,%u]}",
+ policy.doorOpen?"true":"false",adc,policy.dark?"true":"false",policy.fault?"true":"false",policy.red,policy.green,policy.blue);return String(out);
 }
-
-Snapshot acquireSnapshot() {
-  Snapshot snapshot{};
-  snapshot.valid = true;
-  float sum = 0.0f;
-  for (size_t index = 0; index < SENSOR_COUNT; ++index) {
-    const int raw = analogRead(SENSOR_PINS[index]);
-    if (raw < 0) snapshot.valid = false;
-    snapshot.values[index] = normalizeReading(raw);
-    sum += snapshot.values[index];
-  }
-  snapshot.score = sum / SENSOR_COUNT;
-  return snapshot;
+void setup(){
+ Serial.begin(115200);pinMode(DOOR,INPUT_PULLUP);analogReadResolution(12);analogSetPinAttenuation(LIGHT,ADC_11db);
+ ledcSetup(0,5000,8);ledcSetup(1,5000,8);ledcSetup(2,5000,8);
+ ledcAttachPin(R,0);ledcAttachPin(G,1);ledcAttachPin(B,2);ledcWrite(0,0);ledcWrite(1,0);ledcWrite(2,0);
+ WiFi.mode(WIFI_AP);WiFi.softAP("OMP-Offline-006");
+ Serial.print("Lab-only open access point IP: ");Serial.println(WiFi.softAPIP());
+ server.on("/",HTTP_GET,[]{server.send(200,"text/plain","Offline Automation: GET /api/status. Read-only lab demo.");});
+ server.on("/api/status",HTTP_GET,[]{server.send(200,"application/json",statusJson());});server.begin();
 }
-
-bool decide(const Snapshot &snapshot) {
-  if (!snapshot.valid) return false;
-  const bool condition = snapshot.score >= TRIGGER_THRESHOLD;
-  if (!condition) {
-    confirmations = 0;
-  } else if (confirmations < REQUIRED_CONFIRMATIONS) {
-    confirmations += 1;
-  }
-  return confirmations >= REQUIRED_CONFIRMATIONS;
-}
-
-void applyOutput(bool requested, bool valid) {
-  if (!valid) {
-    outputActive = false;
-    state = SystemState::Fault;
-  } else {
-    outputActive = requested;
-    state = requested ? SystemState::Active : SystemState::Normal;
-  }
-  digitalWrite(OUTPUT_PIN, outputActive ? HIGH : LOW);
-}
-
-const char *stateName() {
-  switch (state) {
-    case SystemState::Starting: return "starting";
-    case SystemState::Normal: return "normal";
-    case SystemState::Active: return "active";
-    default: return "fault";
-  }
-}
-
-void publishTelemetry(const Snapshot &snapshot) {
-  Serial.print(R"json({"project_id":6,"mode":"closed_loop_control","state":")json");
-  Serial.print(stateName());
-  Serial.print(R"json(","score":)json");
-  Serial.print(snapshot.score, 3);
-  Serial.print(R"json(,"output":)json");
-  Serial.print(outputActive ? "true" : "false");
-  Serial.print(R"json(,"values":[)json");
-  for (size_t index = 0; index < SENSOR_COUNT; ++index) {
-    if (index) Serial.print(',');
-    Serial.print(snapshot.values[index], 3);
-  }
-  Serial.println("]}");
-}
-
-void setup() {
-  pinMode(OUTPUT_PIN, OUTPUT);
-  digitalWrite(OUTPUT_PIN, LOW);
-  Serial.begin(115200);
-  state = SystemState::Normal;
-}
-
-void loop() {
-  const unsigned long now = millis();
-  if (now - lastSampleAt < SAMPLE_INTERVAL_MS) return;
-  lastSampleAt = now;
-  const Snapshot snapshot = acquireSnapshot();
-  applyOutput(decide(snapshot), snapshot.valid);
-  publishTelemetry(snapshot);
+void loop(){
+ adc=analogRead(LIGHT);uint32_t now=millis();policy.update(digitalRead(DOOR)==HIGH,adc,now);
+ ledcWrite(0,policy.red);ledcWrite(1,policy.green);ledcWrite(2,policy.blue);
+ server.handleClient();if(uint32_t(now-lastReport)>=1000){lastReport=now;Serial.println(statusJson());}
+ delay(5);
 }
