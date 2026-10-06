@@ -15,7 +15,7 @@
   ],
   "scope": "Build a smart home prototype that uses door sensor, RGB LED, light sensor to run rules without cloud access. Include setup instructions, a circuit diagram, tested firmware, and sample output.",
   "key_deliverable": "Offline Automation demonstration with repeatable test steps",
-  "mode": "closed_loop_control",
+  "mode": "offline_door_light_rules",
   "entrypoint": "firmware/room-climate-hub-offline-automation/room-climate-hub-offline-automation.ino",
   "roadmap_source": "openmaker-2100-project-roadmap.xlsx"
 }

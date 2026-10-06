@@ -1,22 +1,3 @@
-# Test plan
+Cloud: host assertions, image transport/gates and ESP32 compile. Not performed: physical reed debounce, measured LDR calibration, LED brightness/polarity, Wi-Fi RF access and disconnect-client demonstration.
 
-## Static checks
-
-1. Run `python tools/validate.py`.
-2. Confirm the firmware or application starts without missing configuration.
-3. Compare the assembled wiring with `docs/wiring.md` and component datasheets.
-
-## Functional checks
-
-1. Start with simulated or disconnected actuators.
-2. Feed low, nominal, and high readings into the controller.
-3. Confirm the **closed loop control** behavior matches the serial or console output.
-4. Disconnect one sensor and confirm the system enters a safe state.
-5. Restore the sensor and verify recovery requires an intentional acknowledgement for latched safety modes.
-
-## Acceptance criteria
-
-- Telemetry includes a timestamp, state, input readings, and output state.
-- Invalid readings do not command an actuator on.
-- The output changes only after the configured threshold and debounce checks pass.
-- The steps in the README reproduce the demonstration.
+Actual cloud recovery run https://github.com/OpenMakerProjects/room-climate-hub-offline-automation/actions/runs/37416498969 passed policy assertions, all three image transport tests, PNG/SVG/image links/MIT/credential checks and ESP32 build, then repeated all gates on result-documentation head d87435711df742658d1c2c6587b8583f8bc90087. Hardware tests remain unperformed. This connector-authored commit triggers final-head push/PR CI before merge.
